@@ -1,0 +1,4 @@
+wrap_comments = true
+normalize_doc_attributes = true
+normalize_comments = true
+reorder_imports = true
