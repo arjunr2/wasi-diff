@@ -10,3 +10,4 @@ log = "0.4.27"
 strum = { version = "0.27.1", features = ["derive", "strum_macros"] }
 strum_macros = "0.27.1"
 wasmtime = "31.0.0"
+wasmtime-wasi = { version = "31.0.0", features = ["preview1"] }

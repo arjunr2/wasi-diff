@@ -1,16 +1,18 @@
+use log::debug;
+use std::error::Error;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-mod wasmtime;
-
-/// Interface supported by all Wasm engines
-trait EngineT {
-    fn new() -> Self;
-    // fn load(&self) -> Result<(), String>;
-    // fn instantiate(&self) -> Result<(), String>;
-    // fn run(&self, args: Vec<String>) -> Result<(), String>;
-    // fn hash_state(&self) -> String;
+/// Instrumentation captured data from engine
+/// Each engine returns a Log object after execution
+#[derive(Debug, Clone, Copy)]
+struct ExecLog {
+    hash: i64,
+    executed: bool,
 }
+
+// mod wasmer;
+mod wasmtime;
 
 #[derive(Debug, EnumIter)]
 enum Engine {
@@ -18,15 +20,9 @@ enum Engine {
     Wasmer,
 }
 
-impl EngineT for Engine {
-    fn new() -> Self {
-        Engine::Wasmtime
-    }
-}
-
-pub fn engine_variants() {
+pub fn dispatch_all(command: &Vec<String>) {
     for engine in Engine::iter() {
-        println!("Engine: {:?}", engine);
+        debug!("Engine: {:?}", engine);
+        let _ = wasmtime::dispatch(command).unwrap();
     }
-    wasmtime::test_method();
 }

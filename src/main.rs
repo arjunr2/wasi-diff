@@ -1,5 +1,5 @@
 use clap::Parser;
-use log::{error, info};
+use log::info;
 use std::error::Error;
 
 mod engines;
@@ -8,30 +8,23 @@ mod engines;
 #[derive(Parser, Debug)]
 #[command(version, about="Differential Tester for WASI implementations", long_about = None)]
 struct CLI {
-    /// Enumerated CLI arguments (for single-run configs)
-    #[arg(short = 'a', long = "args", num_args=0..)]
-    runargs: Option<Vec<String>>,
-
     /// File to read arguments from (for multi-run configs)
     #[arg(short, long)]
     runfile: Option<String>,
 
-    /// Wasm binary file to test
-    #[arg(short = 'f', long = "file")]
-    infile: String,
+    /// Run Commands (Wasm binary + Args) to test
+    #[arg(short, long, num_args=1..)]
+    command: Vec<String>,
 }
 
 impl CLI {
     /// Log the command line arguments
     fn print(&self) {
-        info!("Input file: {}", self.infile);
+        info!("Input file: {}", self.command[0]);
         if let Some(runfile) = &self.runfile {
             info!("RunFile: {:?}", runfile);
-        } else if let Some(runargs) = &self.runargs {
-            info!("RunArgs: {:?}", runargs);
         } else {
-            error!("No runfile or runargs provided");
-            panic!();
+            info!("RunArgs: {:?}", self.command);
         }
     }
 }
@@ -42,8 +35,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cli = CLI::parse();
     cli.print();
     info!("Starting differential testing...");
+    engines::dispatch_all(&cli.command);
     info!("Exiting process");
-    engines::engine_variants();
     Ok(())
     // Err("Error in process".into())
 }

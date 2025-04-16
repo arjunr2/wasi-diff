@@ -78,7 +78,7 @@ void copy_file_read_write_vectored(const char *src_path, const char *dst_path) {
 
 int main(int argc, char *argv[]) {
   if (argc != 3) {
-    printf("Invalid arguments; expects two file paths (read file and write file)\n");
+    printf("Invalid arguments; expects two file paths (read file and write file); got %d\n", argc);
     return 1;
   }
   copy_file_read_write_vectored(argv[1], argv[2]);
