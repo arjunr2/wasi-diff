@@ -1,5 +1,5 @@
 use super::{Error, ExecLog};
-use log::{debug, info};
+use log::debug;
 
 use wasmtime::*;
 use wasmtime_wasi::preview1;
@@ -12,7 +12,7 @@ struct WasmtimeCtx {
 
 fn snapshot(mut caller: Caller<'_, WasmtimeCtx>, num_bytes: i32) {
     let target = format!("{}::snapshot", module_path!());
-    debug!(target: &target, "Snapshot function called from module");
+    debug!(target: &target, "Snapshot function called from module: {:?}", num_bytes);
     caller.data_mut().log = ExecLog {
         hash: 0,
         executed: true,
@@ -40,7 +40,6 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
     preview1::add_to_linker_sync(&mut linker, |t: &mut WasmtimeCtx| &mut t.wasi)?;
     let pre = linker.instantiate_pre(&module)?;
 
-    info!("Args: {:?}", args);
     // Context for WASI and instrumentation
     let context = WasmtimeCtx {
         wasi: WasiCtxBuilder::new()
@@ -66,14 +65,13 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
 
     debug!("Executing module...");
     let run = instance.get_typed_func::<(), ()>(&mut store, "_start")?;
-    let _ = run.call(&mut store, ());
+    let _result = run.call(&mut store, ());
+    let _exit_code = 0;
 
     let exec = &store.data().log;
     if exec.executed {
-        debug!(target: module_path!(), "Executed Successfully")
+        debug!(target: module_path!(), "Execution complete")
     }
-
-    debug!("{:?}", exec);
 
     Ok(*exec)
 }

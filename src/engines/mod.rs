@@ -11,18 +11,30 @@ struct ExecLog {
     executed: bool,
 }
 
-// mod wasmer;
+// Engines
+mod wasmedge;
+mod wasmer;
 mod wasmtime;
 
 #[derive(Debug, EnumIter)]
 enum Engine {
     Wasmtime,
     Wasmer,
+    WasmEdge,
 }
 
 pub fn dispatch_all(command: &Vec<String>) {
     for engine in Engine::iter() {
-        debug!("Engine: {:?}", engine);
-        let _ = wasmtime::dispatch(command).unwrap();
+        match engine {
+            Engine::Wasmtime => {
+                wasmtime::dispatch(command).unwrap();
+            }
+            Engine::Wasmer => {
+                wasmer::dispatch(command).unwrap();
+            }
+            Engine::WasmEdge => {
+                wasmedge::dispatch(command).unwrap();
+            }
+        }
     }
 }
