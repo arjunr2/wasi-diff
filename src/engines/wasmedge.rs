@@ -1,6 +1,7 @@
-use super::{Error, ExecLog};
+use super::{Error, ExecLog, compute_hash};
 use log::debug;
 use std::collections::HashMap;
+use std::slice;
 
 use wasmedge_sdk::{
     AsInstance, CallingFrame, ImportObjectBuilder, Instance, Module, Store, ValType, Vm, WasmValue,
@@ -10,7 +11,7 @@ use wasmedge_sdk::{
 fn snapshot(
     data: &mut ExecLog,
     _inst: &mut Instance,
-    _caller: &mut CallingFrame,
+    caller: &mut CallingFrame,
     input: Vec<WasmValue>,
 ) -> Result<Vec<WasmValue>, CoreError> {
     if input.len() != 1 && input[0].ty() != ValType::I32 {
@@ -19,11 +20,21 @@ fn snapshot(
         ));
     }
 
-    let num_bytes = input[0].to_i32();
-
+    let num_bytes = input[0].to_i32() as u32;
     let target = format!("{}::snapshot", module_path!());
     debug!(target: &target, "Snapshot function called from module: {:?}", num_bytes);
-    data.executed = true;
+
+    unsafe {
+        // Compute memory segment hash
+        let mem_ptr = caller
+            .memory_ref(0)
+            .unwrap()
+            .data_pointer(0, num_bytes)
+            .unwrap();
+        let mem_slice = slice::from_raw_parts(mem_ptr, num_bytes as usize);
+        compute_hash(data, mem_slice);
+    }
+
     Ok(vec![])
 }
 
@@ -34,10 +45,7 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
     let module = Module::from_file(None, filepath)?;
 
     // Context for instrumentation
-    let context = ExecLog {
-        hash: 0,
-        executed: false,
-    };
+    let context = ExecLog { hash: None };
 
     // Construct imports
     let mut import_builder = ImportObjectBuilder::new("env", context)?;
@@ -62,5 +70,7 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
     debug!("Executing module...");
     vm.run_func(None, "_start", params!())?;
 
-    Ok(context)
+    let result = import_object.get_host_data();
+
+    Ok(*result)
 }

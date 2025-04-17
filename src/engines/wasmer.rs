@@ -7,7 +7,7 @@ use wasmer_wasix::WasiEnv;
 fn snapshot(mut env: FunctionEnvMut<ExecLog>, num_bytes: i32) {
     let target = format!("{}::snapshot", module_path!());
     debug!(target: &target, "Snapshot function called from module: {:?}", num_bytes);
-    env.data_mut().executed = true;
+    // env.data_mut().executed = true;
 }
 
 pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
@@ -21,13 +21,7 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
     let module = Module::new(&mut store, bin)?;
 
     // Context for instrumentation
-    let context = FunctionEnv::new(
-        &mut store,
-        ExecLog {
-            hash: 0,
-            executed: false,
-        },
-    );
+    let context = FunctionEnv::new(&mut store, ExecLog { hash: None });
 
     debug!("Executing module...");
     let _ = WasiEnv::builder(filepath)

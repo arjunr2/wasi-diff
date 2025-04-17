@@ -1,4 +1,4 @@
-use super::{Error, ExecLog};
+use super::{Error, ExecLog, compute_hash};
 use log::debug;
 
 use wasmtime::*;
@@ -13,10 +13,17 @@ struct WasmtimeCtx {
 fn snapshot(mut caller: Caller<'_, WasmtimeCtx>, num_bytes: i32) {
     let target = format!("{}::snapshot", module_path!());
     debug!(target: &target, "Snapshot function called from module: {:?}", num_bytes);
-    caller.data_mut().log = ExecLog {
-        hash: 0,
-        executed: true,
-    };
+
+    // let export = caller.get_export("memory").unwrap();
+    let (mem_slice, data) = caller
+        .get_export("memory")
+        .unwrap()
+        .into_memory()
+        .unwrap()
+        .data_and_store_mut(caller.as_context_mut());
+
+    // Compute memory segment hash
+    compute_hash(&mut data.log, mem_slice);
 }
 
 pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
@@ -31,7 +38,7 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
     linker.func_wrap(
         "env",
         "snapshot",
-        |mut caller: Caller<'_, WasmtimeCtx>, num_bytes: i32| {
+        |caller: Caller<'_, WasmtimeCtx>, num_bytes: i32| {
             snapshot(caller, num_bytes);
         },
     )?;
@@ -53,10 +60,7 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
                 FilePerms::all(),
             )?
             .build_p1(),
-        log: ExecLog {
-            hash: 0,
-            executed: false,
-        },
+        log: ExecLog { hash: None },
     };
 
     let mut store = Store::new(&engine, context);
@@ -69,9 +73,6 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
     let _exit_code = 0;
 
     let exec = &store.data().log;
-    if exec.executed {
-        debug!(target: module_path!(), "Execution complete")
-    }
 
     Ok(*exec)
 }

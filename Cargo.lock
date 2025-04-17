@@ -5109,6 +5109,7 @@ dependencies = [
  "wasmer-wasix",
  "wasmtime",
  "wasmtime-wasi",
+ "xxhash-rust",
 ]
 
 [[package]]
