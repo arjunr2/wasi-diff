@@ -1,0 +1,3 @@
+[submodule "samples/wasm-instrument"]
+	path = samples/wasm-instrument
+	url = https://github.com/arjunr2/wasm-instrument.git
