@@ -19,13 +19,13 @@ fn compute_hash(data: &mut ExecLog, input: &[u8]) {
 
 // Engines
 mod wasmedge;
-mod wasmer;
+// mod wasmer;
 mod wasmtime;
 
 #[derive(Debug, EnumIter, Eq, PartialEq, Hash)]
 enum Engine {
     Wasmtime,
-    Wasmer,
+    // Wasmer,
     WasmEdge,
 }
 
@@ -35,10 +35,11 @@ pub fn dispatch_all(command: &Vec<String>) {
             let x = match e {
                 Engine::Wasmtime => wasmtime::dispatch(command),
                 Engine::WasmEdge => wasmedge::dispatch(command),
-                _ => {
-                    warn!("Unsupported engine: {:?}", e);
-                    Ok(ExecLog { hash: None })
-                }
+                // Engine::Wasmer => wasmer::dispatch(command),
+                //_ => {
+                //    warn!("Unsupported engine: {:?}", e);
+                //    Ok(ExecLog { hash: None })
+                //}
             };
             let x = match x {
                 Ok(v) => {
@@ -46,7 +47,8 @@ pub fn dispatch_all(command: &Vec<String>) {
                     v
                 }
                 Err(err) => {
-                    error!("{:?} -- {:?}", e, err);
+                    let esc = format!("{}::{:?}", module_path!(), e);
+                    error!(target: &esc, "{:?}", err);
                     ExecLog { hash: None }
                 }
             };

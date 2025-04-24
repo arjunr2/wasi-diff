@@ -3,12 +3,26 @@ name = "wasi-difftest"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "wasi-diff"
+path = "src/wasi-diff.rs"
+
+[[bin]]
+name = "dirgen"
+path = "src/dirgen.rs"
+
 [dependencies]
+anyhow = "1.0.98"
 clap = { version = "4.5.36", features = ["derive"] }
 env_logger = "0.11.8"
+ftzz = "3.0.0"
 log = "0.4.27"
+rand = "0.9.1"
+random-string = "1.1.0"
 strum = { version = "0.27.1", features = ["derive", "strum_macros"] }
 strum_macros = "0.27.1"
+tokio = "1.44.2"
+walkdir = "2.5.0"
 wasmedge-sdk = "0.14.0"
 wasmer = "6.0.0-beta.1"
 wasmer-compiler = "5.0.4"

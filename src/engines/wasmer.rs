@@ -26,7 +26,7 @@ pub fn dispatch(command: &Vec<String>) -> Result<ExecLog, Box<dyn Error>> {
     debug!("Executing module...");
     let _ = WasiEnv::builder(filepath)
         .args(args)
-        //.preopen_dir("samples/data")?
+        .preopen_dir("samples/data")?
         .import(
             "env",
             "snapshot",
